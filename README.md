@@ -33,7 +33,7 @@ RAGX/
 - **FAISS:** For efficient similarity search
 - **Streamlit:** For the interactive web interface
 
-## 🏃‍♂️ How to Run
+##  How to Run
 
 ### 1. Clone the repository
 ```bash
@@ -63,7 +63,7 @@ python -m streamlit run app.py
 ### 5. Access the App
 Open your browser and navigate to `http://localhost:8501`.
 
-## 🧪 Testing the System
+##  Testing the System
 
 Once the app is running, try asking questions to see the hallucination mitigation in action:
 - **Good Question (In Knowledge Base):** *"What is the Sun made of?"*
@@ -71,6 +71,6 @@ Once the app is running, try asking questions to see the hallucination mitigatio
 - **Out of Context / Deceptive Question:** *"Who is the president of Mars?"*
   - The model will either safely admit it doesn't know, or if it tries to hallucinate an answer, the Verifier will catch the contradiction and flag it (` HALLUCINATION DETECTED `).
 
-## 📚 Customizing the Knowledge Base
+##  Customizing the Knowledge Base
 
 You can easily use your own data by updating the `data/sample_kb.txt` file. Just add your text content line by line or in chunks. The `retriever.py` will automatically re-embed the new knowledge base the next time you start the app.
