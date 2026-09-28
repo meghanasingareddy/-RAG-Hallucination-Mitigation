@@ -15,7 +15,7 @@ class Retriever:
         if not os.path.exists(self.kb_path):
             raise FileNotFoundError(f"Knowledge base file not found at {self.kb_path}")
         
-        with open(self.kb_path, 'r', encoding='utf-8') as f:
+        with open(self.kb_path, 'r', encoding='utf-8', errors='ignore') as f:
             lines = f.readlines()
             
         # simple chunking by line/sentence

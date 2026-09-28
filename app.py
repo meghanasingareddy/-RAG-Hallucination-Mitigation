@@ -1,56 +1,82 @@
-import streamlit as st
 import os
-from src.retriever import Retriever
-from src.generator import Generator
-from src.verifier import Verifier
+import streamlit as st
 
-st.set_page_config(page_title="RAG Anti-Hallucination", layout="centered")
+st.set_page_config(page_title="RAG Anti-Hallucination", page_icon="🧠", layout="centered")
+st.title("🧠 RAG Hallucination Mitigation")
+st.caption("Retrieval-Augmented Transformer with NLI Verification")
 
-@st.cache_resource
-def load_models():
-    kb_path = "data/sample_kb.txt"
-    if not os.path.exists(kb_path):
-        st.error("Knowledge base not found!")
-        return None, None, None
-        
-    retriever = Retriever(kb_path)
+# ── Step 1: Download models with live progress bars ──────────────────────────
+@st.cache_resource(show_spinner=False)
+def download_and_load():
+    from model_downloader import download_models_with_progress
+    download_models_with_progress()
+
+    st.markdown("### 🔧 Initialising Pipeline")
+
+    prog = st.progress(0, text="📂 Building FAISS index from knowledge base...")
+    from src.retriever import Retriever
+    retriever = Retriever("data/sample_kb.txt")
+    prog.progress(0.5, text="🤖 Loading generator (flan-t5-small)...")
+
+    from src.generator import Generator
     generator = Generator()
+    prog.progress(0.85, text="🔍 Loading hallucination verifier (NLI)...")
+
+    from src.verifier import Verifier
     verifier = Verifier()
+    prog.progress(1.0, text="✅ All components ready!")
+
     return retriever, generator, verifier
 
-st.title("Mitigating Hallucinations in RAG")
-st.markdown("This simple clean deep learning project demonstrates a RAG framework with an explicit hallucination-checking mechanism using NLI.")
 
-retriever, generator, verifier = load_models()
+retriever, generator, verifier = download_and_load()
 
-if retriever and generator and verifier:
-    with st.expander("View Knowledge Base"):
-        with open("data/sample_kb.txt", "r", encoding="utf-8") as f:
-            st.text(f.read())
+st.success("✅ System Ready — ask anything below!")
+st.divider()
 
-    query = st.text_input("Ask a question based on the Knowledge Base:")
+# ── Step 2: Knowledge base preview ───────────────────────────────────────────
+with st.expander("📖 Sample Knowledge Base Entries"):
+    try:
+        with open("data/sample_kb.txt", "r", encoding="utf-8", errors="ignore") as f:
+            for i, line in enumerate(f):
+                if i >= 5:
+                    break
+                st.write(f"- {line.strip()[:250]}")
+    except Exception as e:
+        st.warning(f"Could not read KB: {e}")
 
-    if st.button("Submit") and query:
-        with st.spinner("Retrieving context..."):
-            contexts = retriever.retrieve(query, top_k=3)
-            
-        st.subheader("Retrieved Context")
-        for i, ctx in enumerate(contexts):
-            st.write(f"- {ctx}")
-            
-        with st.spinner("Generating answer..."):
-            initial_answer = generator.generate_answer(query, contexts)
-            
-        st.subheader("Generated Answer")
-        st.write(initial_answer)
-        
-        with st.spinner("Checking for hallucination..."):
-            is_hallucination = verifier.is_hallucination(contexts, initial_answer)
-            
-        st.subheader("Hallucination Verification")
-        if is_hallucination:
-            st.error("⚠️ HALLUCINATION DETECTED ⚠️\nThe generated answer is not fully supported by the retrieved context.")
-            st.warning("Final Answer: I don't have enough information to answer that based on the context.")
-        else:
-            st.success("✅ VERIFIED ✅\nThe answer is entailed by the context.")
-            st.success(f"Final Answer: {initial_answer}")
+# ── Step 3: Query UI ──────────────────────────────────────────────────────────
+query = st.text_input(
+    "💬 Ask a question:",
+    placeholder="e.g. Who was Beyonce's husband?  /  What is the boiling point of water?"
+)
+
+if st.button("🔎 Submit", type="primary") and query.strip():
+
+    # Retrieval
+    with st.spinner("🔎 Retrieving relevant passages..."):
+        contexts = retriever.retrieve(query, top_k=3)
+
+    st.subheader("📚 Retrieved Context")
+    for i, ctx in enumerate(contexts):
+        st.info(f"**Passage {i+1}:** {ctx[:350]}")
+
+    # Generation
+    with st.spinner("🤖 Generating answer with FLAN-T5..."):
+        initial_answer = generator.generate_answer(query, contexts)
+
+    st.subheader("📝 Raw Generated Answer")
+    st.write(f"> {initial_answer}")
+
+    # Verification
+    with st.spinner("🔍 Checking for hallucination..."):
+        is_hallucination = verifier.is_hallucination(contexts, initial_answer)
+
+    st.divider()
+    st.subheader("🔍 Final Verdict")
+    if is_hallucination:
+        st.error("⚠️ HALLUCINATION DETECTED — Not supported by context.")
+        st.warning("**Safe Final Answer:** I don't have enough information in the knowledge base to answer that.")
+    else:
+        st.success("✅ VERIFIED — Answer is entailed by the retrieved context.")
+        st.success(f"**Final Answer:** {initial_answer}")
