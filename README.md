@@ -2,14 +2,14 @@
 
 This repository demonstrates a clean, deep learning project that tackles one of the most critical issues with Large Language Models: **Hallucinations**. It implements a Retrieval-Augmented Generation (RAG) framework equipped with an explicit hallucination-checking mechanism using Natural Language Inference (NLI).
 
-## 🚀 Features
+##  Features
 
 - **Knowledge Base Retrieval:** Uses `sentence-transformers` and `FAISS` to embed and retrieve the most relevant context from a knowledge base.
 - **Strict Generation Prompting:** Uses a local transformer model (`google/flan-t5-small`) to generate answers based strictly on the retrieved context.
 - **NLI Hallucination Verification:** Uses a Cross-Encoder NLI model (`cross-encoder/nli-deberta-v3-small`) to verify if the generated answer is entailed by the retrieved context. If it isn't, the hallucination is caught and flagged!
 - **Interactive Web UI:** Built with `Streamlit` to easily interact with the knowledge base, ask questions, and see the retrieval and verification processes in real-time.
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 RAGX/
@@ -25,7 +25,7 @@ RAGX/
 └── README.md               # This file
 ```
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 - **PyTorch:** Deep Learning framework
 - **Hugging Face Transformers:** For the LLM Generator and NLI Verifier models
@@ -67,9 +67,9 @@ Open your browser and navigate to `http://localhost:8501`.
 
 Once the app is running, try asking questions to see the hallucination mitigation in action:
 - **Good Question (In Knowledge Base):** *"What is the Sun made of?"*
-  - The system will retrieve the context, generate the answer, and verify it successfully (`✅ VERIFIED ✅`).
+  - The system will retrieve the context, generate the answer, and verify it successfully (` VERIFIED `).
 - **Out of Context / Deceptive Question:** *"Who is the president of Mars?"*
-  - The model will either safely admit it doesn't know, or if it tries to hallucinate an answer, the Verifier will catch the contradiction and flag it (`⚠️ HALLUCINATION DETECTED ⚠️`).
+  - The model will either safely admit it doesn't know, or if it tries to hallucinate an answer, the Verifier will catch the contradiction and flag it (` HALLUCINATION DETECTED `).
 
 ## 📚 Customizing the Knowledge Base
 

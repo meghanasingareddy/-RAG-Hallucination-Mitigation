@@ -1,14 +1,12 @@
 import torch
-from transformers import pipeline
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 class Generator:
     def __init__(self, model_name: str = 'google/flan-t5-small'):
         print(f"Loading generator model: {model_name}...")
-        self.pipeline = pipeline(
-            "text2text-generation", 
-            model=model_name, 
-            device=0 if torch.cuda.is_available() else -1
-        )
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name).to(self.device)
         print("Generator model loaded.")
 
     def generate_answer(self, query: str, context_documents: list) -> str:
@@ -24,8 +22,9 @@ class Generator:
             f"Answer:"
         )
         
-        result = self.pipeline(prompt, max_length=150, num_return_sequences=1)
-        answer = result[0]['generated_text']
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+        outputs = self.model.generate(**inputs, max_new_tokens=150)
+        answer = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
         return answer.strip()
 
 if __name__ == "__main__":
